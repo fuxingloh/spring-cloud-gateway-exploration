@@ -1,0 +1,7 @@
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+}
+
+bootBuildImage {
+    imageName = "spring.fuxing.dev/service:latest"
+}
