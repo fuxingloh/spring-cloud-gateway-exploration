@@ -1,4 +1,18 @@
 version: '3.6'
 
 services:
+  redis:
+    image: redis:6-alpine
 
+  service:
+    image: spring-gateway.fuxing.dev/service:latest
+    ports:
+      - 10100:8080
+
+  gateway:
+    image: spring-gateway.fuxing.dev/gateway:latest
+    ports:
+      - 10101:8080
+    environment:
+      SVC_EXPENSIVE_URI: http://service:8080
+      REDIS_URI: http://redis:6379

@@ -1,6 +1,4 @@
 rootProject.name = 'spring-cloud-gateway-nio-demo'
 
 include 'service'
-
-include 'gateway-blocking'
-include 'gateway-reactive'
+include 'gateway'

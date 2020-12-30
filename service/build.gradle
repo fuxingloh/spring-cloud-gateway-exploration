@@ -3,5 +3,5 @@ dependencies {
 }
 
 bootBuildImage {
-    imageName = "spring.fuxing.dev/service:latest"
+    imageName = "spring-gateway.fuxing.dev/service:latest"
 }
