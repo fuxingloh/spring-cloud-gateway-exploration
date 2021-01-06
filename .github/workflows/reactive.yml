@@ -22,7 +22,7 @@ jobs:
         run: docker-compose up -d gateway-reactive
 
       - name: Run k6
-        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run --summary-export=/benchmark/summary.json /benchmark/reactive.js
+        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e HOST=localhost:10104 --summary-export=/benchmark/summary.json /benchmark/test.js
         working-directory: benchmark
 
       - uses: actions/upload-artifact@v2
