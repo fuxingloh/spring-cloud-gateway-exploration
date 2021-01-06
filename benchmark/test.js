@@ -2,7 +2,7 @@ import http from 'k6/http';
 import {check} from "k6";
 import {Rate} from "k6/metrics";
 
-const url = `${__ENV.BASE_URL || 'http://localhost:10101'}/api/length/2000/delay/1000`
+const url = `http://${__ENV.HOST || 'localhost:8080'}/api/length/2000/delay/1000`
 const statusFailure = new Rate("status_failure_rate");
 
 export default function () {

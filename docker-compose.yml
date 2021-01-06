@@ -24,3 +24,33 @@ services:
       REDIS_ADDRESS: redis://redis:6379
     depends_on:
       - service
+
+  gateway-blocking:
+    image: spring-gateway.fuxing.dev/gateway-blocking:latest
+    ports:
+      - 10102:8080
+    environment:
+      SVC_URI: http://service:8080
+      REDIS_ADDRESS: redis://redis:6379
+    depends_on:
+      - service
+
+  gateway-nio:
+    image: spring-gateway.fuxing.dev/gateway-nio:latest
+    ports:
+      - 10103:8080
+    environment:
+      SVC_URI: http://service:8080
+      REDIS_ADDRESS: redis://redis:6379
+    depends_on:
+      - service
+
+  gateway-reactive:
+    image: spring-gateway.fuxing.dev/gateway-reactive:latest
+    ports:
+      - 10104:8080
+    environment:
+      SVC_URI: http://service:8080
+      REDIS_ADDRESS: redis://redis:6379
+    depends_on:
+      - service

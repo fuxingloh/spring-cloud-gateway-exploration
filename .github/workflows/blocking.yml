@@ -1,4 +1,4 @@
-name: Forward
+name: Blocking
 
 on: workflow_dispatch
 
@@ -14,15 +14,15 @@ jobs:
           java-version: 11
 
       - name: Docker build
-        run: ./gradlew service:bootBuildImage gateway-forward:bootBuildImage
+        run: ./gradlew service:bootBuildImage gateway-blocking:bootBuildImage
 
       - run: docker pull loadimpact/k6
 
       - name: Docker compose up
-        run: docker-compose up -d gateway-forward
+        run: docker-compose up -d gateway-blocking
 
       - name: Run k6
-        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e HOST=localhost:10101 --summary-export=/benchmark/summary.json /benchmark/test.js
+        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e HOST=localhost:10102 --summary-export=/benchmark/summary.json /benchmark/test.js
         working-directory: benchmark
 
       - uses: actions/upload-artifact@v2
