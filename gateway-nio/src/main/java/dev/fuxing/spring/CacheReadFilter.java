@@ -22,25 +22,22 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
 @Component
-public class ReactiveCacheReadFilter implements GlobalFilter, Ordered {
+public class CacheReadFilter implements GlobalFilter, Ordered {
 
     private final RedissonReactiveClient redissonClient;
 
     @Autowired
-    public ReactiveCacheReadFilter(RedissonReactiveClient redissonClient) {
+    public CacheReadFilter(RedissonReactiveClient redissonClient) {
         this.redissonClient = redissonClient;
     }
 
     @Override
+    public int getOrder() {
+        return NettyWriteResponseFilter.WRITE_RESPONSE_FILTER_ORDER - 1;
+    }
+
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
-        Objects.requireNonNull(route);
-
-        // Specific to this example just to check if route is reactive.
-        if (!"reactive".equals(route.getId())) {
-            return chain.filter(exchange);
-        }
-
         RequestPath path = exchange.getRequest().getPath();
         RBinaryStreamReactive stream = redissonClient.getBinaryStream(path.value());
 
@@ -57,10 +54,5 @@ public class ReactiveCacheReadFilter implements GlobalFilter, Ordered {
                     }));
                 })
                 .switchIfEmpty(chain.filter(exchange));
-    }
-
-    @Override
-    public int getOrder() {
-        return NettyWriteResponseFilter.WRITE_RESPONSE_FILTER_ORDER - 1;
     }
 }

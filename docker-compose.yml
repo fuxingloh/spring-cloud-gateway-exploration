@@ -11,10 +11,10 @@ services:
     ports:
       - 10100:8080
 
-  gateway:
-    image: spring-gateway.fuxing.dev/gateway:latest
+  gateway-forward:
+    image: spring-gateway.fuxing.dev/gateway-forward:latest
     ports:
       - 10101:8080
     environment:
-      SVC_EXPENSIVE_URI: http://service:8080
+      SVC_URI: http://service:8080
       REDIS_ADDRESS: redis://redis:6379
