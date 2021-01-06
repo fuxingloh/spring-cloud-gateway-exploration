@@ -20,7 +20,7 @@ public class NIOApplication {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("nio", r -> r.path("/api/**")
+                .route(r -> r.path("/api/**")
                         .filters(f -> f.rewritePath("/api/(?<path>.*)", "/${path}"))
                         .uri(svcUri))
                 .build();

@@ -14,8 +14,10 @@ import java.util.stream.IntStream;
 @RestController
 public class RandomController {
 
-    @GetMapping("/length/{length}/delay/{delay}")
-    private Mono<List<DataStructure>> get(@PathVariable int length, @PathVariable int delay) {
+    @GetMapping("/length/{length}/delay/{delay}/distinct/{distinct}")
+    private Mono<List<DataStructure>> get(@PathVariable int length,
+                                          @PathVariable int delay,
+                                          @PathVariable String distinct) {
         return Mono.delay(Duration.ofMillis(delay))
                 .map(l -> IntStream.range(0, length)
                         .mapToObj(operand -> {

@@ -1,4 +1,4 @@
-name: nio
+name: Load Testing
 
 on: workflow_dispatch
 
@@ -6,6 +6,9 @@ jobs:
   k6:
     name: k6 Load Testing
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        type: [ forward, blocking, nio ]
 
     steps:
       - uses: actions/checkout@v2
@@ -14,15 +17,15 @@ jobs:
           java-version: 11
 
       - name: Docker build
-        run: ./gradlew service:bootBuildImage gateway-nio:bootBuildImage
+        run: ./gradlew service:bootBuildImage gateway-${{ matrix.type }}:bootBuildImage
 
       - run: docker pull loadimpact/k6
 
       - name: Docker compose up
-        run: docker-compose up -d gateway-nio
+        run: docker-compose up -d gateway-${{ matrix.type }}
 
       - name: Run k6
-        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e HOST=localhost:10103 --summary-export=/benchmark/summary.json /benchmark/test.js
+        run: sudo docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e TYPE=${{ matrix.type }} --summary-export=/benchmark/summary.json /benchmark/test.js
         working-directory: benchmark
 
       - uses: actions/upload-artifact@v2

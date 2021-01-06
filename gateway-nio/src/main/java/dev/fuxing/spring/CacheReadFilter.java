@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.filter.NettyWriteResponseFilter;
-import org.springframework.cloud.gateway.route.Route;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
 @Component
@@ -50,6 +49,9 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
                         ServerHttpResponse response = exchange.getResponse();
                         DataBuffer dataBuffer = response.bufferFactory().allocateBuffer();
                         dataBuffer.write(bytes);
+
+                        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                        response.getHeaders().setContentLength(bytes.length);
                         return response.writeWith(Flux.just(dataBuffer));
                     }));
                 })

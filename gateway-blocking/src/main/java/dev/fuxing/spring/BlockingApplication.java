@@ -20,7 +20,7 @@ public class BlockingApplication {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("blocking", r -> r.path("/api/**")
+                .route(r -> r.path("/api/**")
                         .filters(f -> f.rewritePath("/api/(?<path>.*)", "/${path}"))
                         .uri(svcUri))
                 .build();
