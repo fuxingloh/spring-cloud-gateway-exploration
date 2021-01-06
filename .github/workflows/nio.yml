@@ -1,4 +1,4 @@
-name: Forward
+name: nio
 
 on: workflow_dispatch
 
@@ -14,15 +14,15 @@ jobs:
           java-version: 11
 
       - name: Docker build
-        run: ./gradlew service:bootBuildImage gateway-forward:bootBuildImage
+        run: ./gradlew service:bootBuildImage gateway-nio:bootBuildImage
 
       - run: docker pull loadimpact/k6
 
       - name: Docker compose up
-        run: docker-compose up -d gateway-forward
+        run: docker-compose up -d gateway-nio
 
       - name: Run k6
-        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run --summary-export=/benchmark/summary.json /benchmark/forward.js
+        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run --summary-export=/benchmark/summary.json /benchmark/nio.js
         working-directory: benchmark
 
       - uses: actions/upload-artifact@v2
