@@ -1,0 +1,31 @@
+name: Forward
+
+on: workflow_dispatch
+
+jobs:
+  k6:
+    name: k6 Load Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1.3.0
+        with:
+          java-version: 11
+
+      - name: Docker build
+        run: ./gradlew service:bootBuildImage gateway-forward:bootBuildImage
+
+      - run: docker pull loadimpact/k6
+
+      - name: Docker compose up
+        run: docker-compose up -d gateway-forward
+
+      - name: Run k6
+        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run --summary-export=/benchmark/summary.json /benchmark/forward.js
+        working-directory: benchmark
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: summary
+          path: benchmark/summary.json

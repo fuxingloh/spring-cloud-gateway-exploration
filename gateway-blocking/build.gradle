@@ -4,5 +4,5 @@ dependencies {
 }
 
 bootBuildImage {
-    imageName = "spring-gateway.fuxing.dev/gateway:latest"
+    imageName = "spring-gateway.fuxing.dev/gateway-blocking:latest"
 }

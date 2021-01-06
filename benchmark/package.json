@@ -1,0 +1,8 @@
+{
+  "name": "benchmark",
+  "version": "1.0.0",
+  "dependencies": {
+    "@types/k6": "^0.29.0",
+    "k6": "0.0.0"
+  }
+}

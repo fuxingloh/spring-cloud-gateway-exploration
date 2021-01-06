@@ -1,4 +1,8 @@
-rootProject.name = 'spring-cloud-gateway-nio-demo'
+rootProject.name = 'spring-cloud-gateway-exploration'
 
 include 'service'
-include 'gateway'
+
+include 'gateway-forward'
+include 'gateway-blocking'
+include 'gateway-nio'
+include 'gateway-reactive'
