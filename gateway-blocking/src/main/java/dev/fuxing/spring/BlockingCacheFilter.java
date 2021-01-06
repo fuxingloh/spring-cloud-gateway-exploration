@@ -12,6 +12,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
@@ -58,6 +60,8 @@ public class BlockingCacheFilter implements GlobalFilter, Ordered {
         setAlreadyRouted(exchange);
         return chain.filter(exchange).then(Mono.defer(() -> {
             ServerHttpResponse response = exchange.getResponse();
+            response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+            response.getHeaders().setContentLength(bytes.length);
             return response.writeWith(Flux.just(dataBufferFactory.wrap(bytes)));
         }));
     }

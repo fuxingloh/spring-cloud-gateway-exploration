@@ -1,4 +1,4 @@
-name: nio
+name: NIO
 
 on: workflow_dispatch
 
