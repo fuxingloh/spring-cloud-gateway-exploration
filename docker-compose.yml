@@ -10,6 +10,10 @@ services:
     image: spring-gateway.fuxing.dev/service:latest
     ports:
       - 10100:8080
+    depends_on:
+      # Although it's not occupying cpu cycles or memory for gateway-forward.
+      # For consistency of test, redis is started regardless of the requirement.
+      - redis
 
   gateway-forward:
     image: spring-gateway.fuxing.dev/gateway-forward:latest
@@ -18,3 +22,5 @@ services:
     environment:
       SVC_URI: http://service:8080
       REDIS_ADDRESS: redis://redis:6379
+    depends_on:
+      - service
