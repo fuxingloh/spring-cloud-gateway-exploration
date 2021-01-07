@@ -16,8 +16,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Objects;
-
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
 @Component
@@ -42,7 +40,7 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
 
         return stream.get()
                 .doOnError(throwable -> chain.filter(exchange))
-                .filter(Objects::nonNull)
+                .switchIfEmpty(chain.filter(exchange).then(Mono.empty()))
                 .flatMap(bytes -> {
                     setAlreadyRouted(exchange);
                     return chain.filter(exchange).then(Mono.defer(() -> {
@@ -54,7 +52,6 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
                         response.getHeaders().setContentLength(bytes.length);
                         return response.writeWith(Flux.just(dataBuffer));
                     }));
-                })
-                .switchIfEmpty(chain.filter(exchange));
+                });
     }
 }
