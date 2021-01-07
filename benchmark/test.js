@@ -6,6 +6,9 @@ const statusFailure = new Rate("status_failure_rate");
 
 randomSeed(0)
 
+/**
+ * @return {string} the host for the test
+ */
 function getHost() {
   switch (__ENV.TYPE) {
     case 'forward':
@@ -40,7 +43,6 @@ export default function () {
 }
 
 export const options = {
-  vus: 100,
   stages: [
     {duration: '1m', target: 300},
     {duration: '1m', target: 600},
@@ -48,9 +50,6 @@ export const options = {
     {duration: '1m', target: 1200},
     {duration: '1m', target: 1500},
     {duration: '1m', target: 1800},
-    {duration: '1m', target: 2100},
-    {duration: '1m', target: 1200},
-    {duration: '1m', target: 0},
   ],
 };
 
