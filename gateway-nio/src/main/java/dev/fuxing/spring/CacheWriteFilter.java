@@ -12,7 +12,6 @@ import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
@@ -22,12 +21,12 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.C
 @Component
 public class CacheWriteFilter extends NettyWriteResponseFilter {
 
-    private final RedissonReactiveClient redissonClient;
+    private final RedissonReactiveClient redisson;
 
     @Autowired
-    public CacheWriteFilter(GatewayProperties properties, RedissonReactiveClient redissonClient) {
+    public CacheWriteFilter(GatewayProperties properties, RedissonReactiveClient redisson) {
         super(properties.getStreamingMediaTypes());
-        this.redissonClient = redissonClient;
+        this.redisson = redisson;
     }
 
     /**
@@ -48,6 +47,7 @@ public class CacheWriteFilter extends NettyWriteResponseFilter {
                         return Mono.empty();
                     }
 
+                    RequestPath path = exchange.getRequest().getPath();
                     ServerHttpResponse response = exchange.getResponse();
 
                     Flux<DataBuffer> body = connection
@@ -58,19 +58,15 @@ public class CacheWriteFilter extends NettyWriteResponseFilter {
                             .publish()
                             .autoConnect(2);
 
-                    // min subscribers: 2 won't run until netty channel connects
-                    // noinspection CallingSubscribeInNonBlockingScope
-                    Disposable disposable = DataBufferUtils.join(body)
-                            .map(DataBuffer::asByteBuffer)
-                            .flatMap(byteBuffer -> {
-                                RequestPath path = exchange.getRequest().getPath();
-                                RBinaryStreamReactive stream = redissonClient.getBinaryStream(path.value());
-                                return stream.write(byteBuffer);
-                            }).subscribe();
-
-                    return response.writeWith(body)
-                            .doOnError(e -> disposable.dispose())
-                            .doOnCancel(disposable::dispose);
+                    return Mono.zip(
+                            response.writeWith(body),
+                            DataBufferUtils.join(body)
+                                    .map(DataBuffer::asByteBuffer)
+                                    .flatMap(buffer -> {
+                                        RBinaryStreamReactive stream = redisson.getBinaryStream(path.value());
+                                        return stream.write(buffer);
+                                    })
+                    ).then();
                 })).doOnCancel(() -> dispose(exchange));
     }
 

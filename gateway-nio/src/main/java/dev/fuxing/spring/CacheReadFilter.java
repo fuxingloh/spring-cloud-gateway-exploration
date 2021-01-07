@@ -39,7 +39,7 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
         RBinaryStreamReactive stream = redissonClient.getBinaryStream(path.value());
 
         return stream.get()
-                .doOnError(throwable -> chain.filter(exchange))
+                .onErrorResume(throwable -> Mono.empty())
                 .switchIfEmpty(chain.filter(exchange).then(Mono.empty()))
                 .flatMap(bytes -> {
                     setAlreadyRouted(exchange);
