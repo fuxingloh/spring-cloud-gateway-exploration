@@ -44,7 +44,7 @@ export const options = {
     {duration: '1m', target: 600},
     {duration: '1m', target: 800},
     {duration: '1m', target: 1000},
-    {duration: '1m', target: 1000},
+    {duration: '3m', target: 1000},
     {duration: '3m', target: 0},
   ],
 };
