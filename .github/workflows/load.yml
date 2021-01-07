@@ -6,6 +6,7 @@ jobs:
   k6:
     name: k6 Load Testing
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     strategy:
       matrix:
         type: [ forward, blocking, nio ]
@@ -25,5 +26,5 @@ jobs:
         run: docker-compose up -d gateway-${{ matrix.type }}
 
       - name: Run k6
-        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e TYPE=${{ matrix.type }} /benchmark/test.js
+        run: docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run --quiet -e TYPE=${{ matrix.type }} /benchmark/test.js
         working-directory: benchmark
