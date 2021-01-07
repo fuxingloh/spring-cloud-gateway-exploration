@@ -25,7 +25,9 @@ jobs:
         run: docker-compose up -d gateway-${{ matrix.type }}
 
       - name: Run k6
-        run: sudo docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e TYPE=${{ matrix.type }} --summary-export=/benchmark/summary.json /benchmark/test.js
+        run: |
+          echo "{}" > summary.json
+          docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e TYPE=${{ matrix.type }} --summary-export=/benchmark/summary.json /benchmark/test.js
         working-directory: benchmark
 
       - uses: actions/upload-artifact@v2
