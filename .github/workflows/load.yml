@@ -6,7 +6,6 @@ jobs:
   k6:
     name: k6 Load Testing
     runs-on: ubuntu-latest
-    timeout-minutes: 35
     strategy:
       matrix:
         type: [ forward, blocking, nio ]

@@ -1,8 +1,5 @@
 import http from 'k6/http';
 import {check, randomSeed} from "k6";
-import {Rate} from "k6/metrics";
-
-const statusFailure = new Rate("status_failure_rate");
 
 randomSeed(0)
 
@@ -36,10 +33,9 @@ function getUrl(distinct) {
 
 export default function () {
   const response = http.get(getUrl(5000));
-
-  statusFailure.add(!check(response, {
+  check(response, {
     "status is 200": (r) => r.status === 200,
-  }))
+  })
 }
 
 export const options = {
@@ -48,8 +44,7 @@ export const options = {
     {duration: '1m', target: 600},
     {duration: '1m', target: 900},
     {duration: '1m', target: 1200},
-    {duration: '1m', target: 1500},
-    {duration: '1m', target: 1800},
+    {duration: '1m', target: 1200},
     {duration: '3m', target: 0},
   ],
 };
