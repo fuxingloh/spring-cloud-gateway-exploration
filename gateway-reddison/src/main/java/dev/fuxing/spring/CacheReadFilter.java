@@ -8,13 +8,9 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.support.TimeoutException;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferFactory;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
-import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -46,7 +42,7 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
         RBinaryStreamReactive stream = redissonClient.getBinaryStream(key);
 
         Mono<DataBuffer> response = stream.get()
-                .map(bytes -> wrap(bytes, exchange.getResponse()))
+                .map(bytes -> exchange.getResponse().bufferFactory().wrap(bytes))
                 .timeout(Duration.ofSeconds(30), Mono.error(new TimeoutException()))
                 .onErrorMap(TimeoutException.class, th -> new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, th.getMessage(), th));
 
@@ -62,18 +58,5 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
                     return exchange.getResponse().writeWith(Flux.just(dataBuffer));
                 })
                 .then(chain.filter(exchange));
-    }
-
-    private DataBuffer wrap(byte[] bytes, ServerHttpResponse response) {
-        DataBufferFactory bufferFactory = response.bufferFactory();
-        if (bufferFactory instanceof NettyDataBufferFactory) {
-            NettyDataBufferFactory factory = (NettyDataBufferFactory) bufferFactory;
-            return factory.wrap(bytes);
-        }
-        // MockServerHttpResponse creates these
-        else if (bufferFactory instanceof DefaultDataBufferFactory) {
-            return ((DefaultDataBufferFactory) bufferFactory).wrap(bytes);
-        }
-        throw new IllegalArgumentException("Unknown DataBufferFactory type " + bufferFactory.getClass());
     }
 }
