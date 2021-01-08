@@ -1,5 +1,7 @@
 # Spring Cloud Gateway Exploration
 
+> README.md: inaccurate due to scope change.
+
 > An exploration into blocking, nio and reactive implementations of Spring Cloud Gateway with a caching downstream
 > service and system back pressure of running such system.
 
@@ -18,15 +20,20 @@ passed along reactively.
 
 * [Service](./service) for the gateway downstream.
 * [Gateway Forward](./gateway-forward) forward request to downstream without caching. 
-* [Gateway Blocking](./gateway-blocking) cache with blocking, aka the wrong way.
+* [Gateway Jedis](gateway-jedis) cache with jedis client.
 * [Gateway Reddison](./gateway-reddison) cache with reddison reactive client.
 * [Gateway Lettuce](./gateway-lettuce) cache with lettuce reactive client.
-* [Gateway Reactive](./gateway-reactive) cache with custom reactive client using flux.
 
 ## Goals
 
-- [ ] Reactive Redis Client with Netty
-- [ ] Run test on AWS ECS?
+- [x] Service: Flexible downstream service for testing
+- [x] Gateway Forward without caching for control testing
+- [x] Gateway Jedis
+- [x] Gateway Reddison
+- [x] Gateway Lettuce
+- [ ] Update README.md to reflect findings and how it's done
+- [ ] Run test on AWS?
+- [ ] Write an article if there is interest or potential for a topic.
 
 
 ## How to run?
@@ -35,9 +42,9 @@ passed along reactively.
 # Build docker images
 $ ./gradlew bootBuildImage
 
-# Run gateway-blocking (forward/blocking/reddison/lettuce/reactive) 
-$ docker-compose up gateway-blocking
+# Run gateway-forward (forward/jedis/reddison/lettuce) 
+$ docker-compose up gateway-forward
 
 # Run stress test on 'NIO' with 1k vcu
-$ docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e TYPE=blocking /benchmark/test.js 
+$ docker run --network host -i -v "$PWD:/benchmark" loadimpact/k6 run -e TYPE=forward /benchmark/test.js 
 ``` 

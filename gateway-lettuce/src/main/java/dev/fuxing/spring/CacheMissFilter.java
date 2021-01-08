@@ -20,12 +20,12 @@ import java.nio.ByteBuffer;
 
 
 @Component
-public class CacheWriteFilter implements GlobalFilter, Ordered {
+public class CacheMissFilter implements GlobalFilter, Ordered {
 
     private final RedisStringReactiveCommands<String, ByteBuffer> client;
 
     @Autowired
-    public CacheWriteFilter(RedisStringReactiveCommands<String, ByteBuffer> client) {
+    public CacheMissFilter(RedisStringReactiveCommands<String, ByteBuffer> client) {
         this.client = client;
     }
 
@@ -54,12 +54,10 @@ public class CacheWriteFilter implements GlobalFilter, Ordered {
                         .publish()
                         .autoConnect(2);
 
-                return Mono.zip(
-                        super.writeWith(flux),
+                return super.writeWith(flux).and(
                         DataBufferUtils.join(flux)
-                                .map(DataBuffer::asByteBuffer)
-                                .flatMap(buffer -> client.set(key, buffer))
-                ).then();
+                                .flatMap(buf -> client.set(key, buf.asByteBuffer()))
+                );
             }
 
             @Override

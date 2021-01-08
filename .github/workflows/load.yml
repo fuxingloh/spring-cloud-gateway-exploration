@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        type: [ forward, blocking, reddison, lettuce ]
+        type: [ forward, jedis, reddison, lettuce ]
 
     steps:
       - uses: actions/checkout@v2

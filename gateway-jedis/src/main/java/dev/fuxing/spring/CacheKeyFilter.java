@@ -18,14 +18,14 @@ public class CacheKeyFilter implements GlobalFilter, Ordered {
     static final String CACHE_KEY_ATTR = CacheKeyFilter.class.getName();
 
     @Override
+    public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
+    }
+
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         RequestPath path = exchange.getRequest().getPath();
         exchange.getAttributes().put(CACHE_KEY_ATTR, path.value());
         return chain.filter(exchange);
-    }
-
-    @Override
-    public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
     }
 }

@@ -18,12 +18,12 @@ import reactor.core.publisher.Mono;
 
 
 @Component
-public class CacheWriteFilter implements GlobalFilter, Ordered {
+public class CacheMissFilter implements GlobalFilter, Ordered {
 
     private final RedissonReactiveClient redisson;
 
     @Autowired
-    public CacheWriteFilter(RedissonReactiveClient redisson) {
+    public CacheMissFilter(RedissonReactiveClient redisson) {
         this.redisson = redisson;
     }
 
@@ -52,12 +52,10 @@ public class CacheWriteFilter implements GlobalFilter, Ordered {
                         .publish()
                         .autoConnect(2);
 
-                return Mono.zip(
-                        super.writeWith(flux),
+                return super.writeWith(flux).and(
                         DataBufferUtils.join(flux)
-                                .map(DataBuffer::asByteBuffer)
-                                .flatMap(stream::write)
-                ).then();
+                                .flatMap(buf -> stream.write(buf.asByteBuffer()))
+                );
             }
 
             @Override
