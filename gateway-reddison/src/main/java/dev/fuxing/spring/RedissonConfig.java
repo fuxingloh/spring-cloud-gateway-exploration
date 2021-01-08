@@ -22,7 +22,7 @@ public class RedissonConfig {
     }
 
     @Bean
-    RedissonReactiveClient redissonReactiveClient(Config config) {
+    RedissonReactiveClient client(Config config) {
         return Redisson.createReactive(config);
     }
 }

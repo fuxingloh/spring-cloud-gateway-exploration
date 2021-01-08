@@ -23,12 +23,12 @@ public class LettuceConfig {
     }
 
     @Bean
-    RedisStringReactiveCommands<String, ByteBuffer> lettuce(RedisClient client) {
+    RedisStringReactiveCommands<String, ByteBuffer> client(RedisClient client) {
         StatefulRedisConnection<String, ByteBuffer> connection = client.connect(new StringByteBufferRedisCodec());
         return connection.reactive();
     }
 
-    public static class StringByteBufferRedisCodec implements RedisCodec<String, ByteBuffer> {
+    private static class StringByteBufferRedisCodec implements RedisCodec<String, ByteBuffer> {
 
         private static final StringCodec stringCodec = StringCodec.UTF8;
 

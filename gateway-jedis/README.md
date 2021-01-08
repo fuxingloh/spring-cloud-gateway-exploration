@@ -1,4 +1,4 @@
-# Gateway Blocking
+# Gateway Jedis
 
 Not specifically blocking but an awkward way to do it in Spring Cloud Gateway. 
 

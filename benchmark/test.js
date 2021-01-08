@@ -10,7 +10,7 @@ function getHost() {
   switch (__ENV.TYPE) {
     case 'forward':
       return 'localhost:10101'
-    case 'blocking':
+    case 'jedis':
       return 'localhost:10102'
     case 'reddison':
       return 'localhost:10103'
@@ -34,7 +34,7 @@ function getUrl(distinct) {
 }
 
 export default function () {
-  const response = http.get(getUrl(5000));
+  const response = http.get(getUrl(10000));
   check(response, {
     "status is 200": (r) => r.status === 200,
   })
