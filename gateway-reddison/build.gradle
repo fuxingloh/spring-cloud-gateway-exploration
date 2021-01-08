@@ -4,5 +4,5 @@ dependencies {
 }
 
 bootBuildImage {
-    imageName = "spring-gateway.fuxing.dev/gateway-nio:latest"
+    imageName = "spring-gateway.fuxing.dev/gateway-reddison:latest"
 }

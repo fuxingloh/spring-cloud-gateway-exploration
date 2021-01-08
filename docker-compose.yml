@@ -35,10 +35,20 @@ services:
     depends_on:
       - service
 
-  gateway-nio:
-    image: spring-gateway.fuxing.dev/gateway-nio:latest
+  gateway-reddison:
+    image: spring-gateway.fuxing.dev/gateway-reddison:latest
     ports:
       - 10103:8080
+    environment:
+      SVC_URI: http://service:8080
+      REDIS_ADDRESS: redis://redis:6379
+    depends_on:
+      - service
+
+  gateway-lettuce:
+    image: spring-gateway.fuxing.dev/gateway-lettuce:latest
+    ports:
+      - 10104:8080
     environment:
       SVC_URI: http://service:8080
       REDIS_ADDRESS: redis://redis:6379
@@ -48,7 +58,7 @@ services:
   gateway-reactive:
     image: spring-gateway.fuxing.dev/gateway-reactive:latest
     ports:
-      - 10104:8080
+      - 10200:8080
     environment:
       SVC_URI: http://service:8080
       REDIS_ADDRESS: redis://redis:6379
