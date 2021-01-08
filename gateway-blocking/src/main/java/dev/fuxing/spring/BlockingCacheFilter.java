@@ -12,7 +12,6 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.stereotype.Component;
@@ -41,46 +40,35 @@ public class BlockingCacheFilter implements GlobalFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        RequestPath path = exchange.getRequest().getPath();
-        RBinaryStream stream = redissonClient.getBinaryStream(path.value());
+        String key = exchange.getAttribute(CacheKeyFilter.CACHE_KEY_ATTR);
+
+        RBinaryStream stream = redissonClient.getBinaryStream(key);
         byte[] bytes = stream.get();
 
-        // Not cached yet, defer and cache once received
-        if (bytes == null) {
-            CachingHttpResponse response = new CachingHttpResponse(exchange, stream);
-            return chain.filter(exchange.mutate().response(response).build());
-        }
-
         // Already exist, write response
-        setAlreadyRouted(exchange);
-        return chain.filter(exchange).then(Mono.defer(() -> {
-            ServerHttpResponse response = exchange.getResponse();
-            response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-            response.getHeaders().setContentLength(bytes.length);
-            return response.writeWith(Flux.just(dataBufferFactory.wrap(bytes)));
-        }));
-    }
-
-    /**
-     * HTTP Response Decorator to intercept and cache response from upstream service.
-     */
-    static class CachingHttpResponse extends ServerHttpResponseDecorator {
-
-        private final RBinaryStream stream;
-
-        public CachingHttpResponse(ServerWebExchange exchange, RBinaryStream stream) {
-            super(exchange.getResponse());
-            this.stream = stream;
-        }
-
-        @Override
-        public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
-            Mono<DataBuffer> joined = DataBufferUtils.join(body);
-            return super.writeWith(joined.doOnSuccess(dataBuffer -> {
-                byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                dataBuffer.asByteBuffer().get(bytes);
-                stream.set(bytes);
+        if (bytes != null) {
+            setAlreadyRouted(exchange);
+            return chain.filter(exchange).then(Mono.defer(() -> {
+                ServerHttpResponse response = exchange.getResponse();
+                response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                response.getHeaders().setContentLength(bytes.length);
+                return response.writeWith(Flux.just(dataBufferFactory.wrap(bytes)));
             }));
         }
+
+        // Not cached yet, defer and cache once received
+        // noinspection NullableProblems
+        ServerHttpResponse modified = new ServerHttpResponseDecorator(exchange.getResponse()) {
+            @Override
+            public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
+                Mono<DataBuffer> joined = DataBufferUtils.join(body);
+                return super.writeWith(joined.doOnSuccess(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.asByteBuffer().get(bytes);
+                    stream.set(bytes);
+                }));
+            }
+        };
+        return chain.filter(exchange.mutate().response(modified).build());
     }
 }
