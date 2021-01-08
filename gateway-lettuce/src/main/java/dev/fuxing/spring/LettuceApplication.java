@@ -8,10 +8,10 @@ import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class NIOApplication {
+public class LettuceApplication {
 
     public static void main(final String[] args) {
-        SpringApplication.run(NIOApplication.class, args);
+        SpringApplication.run(LettuceApplication.class, args);
     }
 
     @Value("${SVC_URI:http://localhost:10100}")

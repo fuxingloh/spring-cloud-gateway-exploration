@@ -4,5 +4,6 @@ include 'service'
 
 include 'gateway-forward'
 include 'gateway-blocking'
-include 'gateway-nio'
+include 'gateway-lettuce'
+include 'gateway-reddison'
 include 'gateway-reactive'

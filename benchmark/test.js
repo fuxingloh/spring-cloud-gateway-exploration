@@ -12,10 +12,12 @@ function getHost() {
       return 'localhost:10101'
     case 'blocking':
       return 'localhost:10102'
-    case 'nio':
+    case 'reddison':
       return 'localhost:10103'
-    case 'reactive':
+    case 'lettuce':
       return 'localhost:10104'
+    case 'reactive':
+      return 'localhost:10200'
     default:
       return 'localhost:8080'
   }
