@@ -48,7 +48,7 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
                         DataBuffer dataBuffer = response.bufferFactory().wrap(buffer);
 
                         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-                        response.getHeaders().setContentLength(dataBuffer.capacity());
+                        response.getHeaders().setContentLength(dataBuffer.readableByteCount());
                         return response.writeWith(Flux.just(dataBuffer));
                     }));
                 });
