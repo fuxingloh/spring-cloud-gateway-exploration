@@ -1,31 +1,32 @@
 package dev.fuxing.spring;
 
+import org.reactivestreams.Publisher;
 import org.redisson.api.RBinaryStreamReactive;
 import org.redisson.api.RedissonReactiveClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.gateway.config.GatewayProperties;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.filter.NettyWriteResponseFilter;
+import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.server.RequestPath;
-import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.netty.Connection;
+import reactor.util.annotation.NonNull;
 
-import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.CLIENT_RESPONSE_CONN_ATTR;
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.isAlreadyRouted;
+
 
 @Component
-public class CacheWriteFilter extends NettyWriteResponseFilter {
+public class CacheWriteFilter implements GlobalFilter, Ordered {
 
     private final RedissonReactiveClient redisson;
 
     @Autowired
-    public CacheWriteFilter(GatewayProperties properties, RedissonReactiveClient redisson) {
-        super(properties.getStreamingMediaTypes());
+    public CacheWriteFilter(RedissonReactiveClient redisson) {
         this.redisson = redisson;
     }
 
@@ -39,41 +40,34 @@ public class CacheWriteFilter extends NettyWriteResponseFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        return chain.filter(exchange)
-                .doOnError(throwable -> dispose(exchange))
-                .then(Mono.defer(() -> {
-                    Connection connection = exchange.getAttribute(CLIENT_RESPONSE_CONN_ATTR);
-                    if (connection == null) {
-                        return Mono.empty();
-                    }
+        if (isAlreadyRouted(exchange)) {
+            return chain.filter(exchange);
+        }
 
-                    RequestPath path = exchange.getRequest().getPath();
-                    ServerHttpResponse response = exchange.getResponse();
-
-                    Flux<DataBuffer> body = connection
-                            .inbound()
-                            .receive()
-                            .retain()
-                            .map(byteBuf -> wrap(byteBuf, response))
-                            .publish()
-                            .autoConnect(2);
-
-                    return Mono.zip(
-                            response.writeWith(body),
-                            DataBufferUtils.join(body)
-                                    .map(DataBuffer::asByteBuffer)
-                                    .flatMap(buffer -> {
-                                        RBinaryStreamReactive stream = redisson.getBinaryStream(path.value());
-                                        return stream.write(buffer);
-                                    })
-                    ).then();
-                })).doOnCancel(() -> dispose(exchange));
+        RequestPath path = exchange.getRequest().getPath();
+        RBinaryStreamReactive stream = redisson.getBinaryStream(path.value());
+        CachingHttpResponse response = new CachingHttpResponse(exchange, stream);
+        return chain.filter(exchange.mutate().response(response).build());
     }
 
-    private void dispose(ServerWebExchange exchange) {
-        Connection connection = exchange.getAttribute(CLIENT_RESPONSE_CONN_ATTR);
-        if (connection != null) {
-            connection.dispose();
+    static class CachingHttpResponse extends ServerHttpResponseDecorator {
+
+        private final RBinaryStreamReactive stream;
+
+        public CachingHttpResponse(ServerWebExchange exchange, RBinaryStreamReactive stream) {
+            super(exchange.getResponse());
+            this.stream = stream;
+        }
+
+        @NonNull
+        @Override
+        public Mono<Void> writeWith(@NonNull Publisher<? extends DataBuffer> body) {
+            return Mono.zip(
+                    super.writeWith(body),
+                    DataBufferUtils.join(body)
+                            .map(DataBuffer::asByteBuffer)
+                            .flatMap(stream::write)
+            ).then();
         }
     }
 }
