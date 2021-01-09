@@ -36,7 +36,7 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
 
         return stream.get()
                 .map(bytes -> exchange.getResponse().bufferFactory().wrap(bytes))
-                .doOnSuccess(buffer -> {
+                .doOnNext(buffer -> {
                     setAlreadyRouted(exchange);
                     exchange.getAttributes().put(CacheReadFilter.class.getName(), buffer);
 
