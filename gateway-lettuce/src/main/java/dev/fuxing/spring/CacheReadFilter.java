@@ -12,6 +12,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.setAlreadyRouted;
 
@@ -36,7 +37,7 @@ public class CacheReadFilter implements GlobalFilter, Ordered {
 
         return client.get(key)
                 .map(buffer -> exchange.getResponse().bufferFactory().wrap(buffer))
-                .doOnSuccess(buffer -> {
+                .doOnNext(buffer -> {
                     setAlreadyRouted(exchange);
                     exchange.getAttributes().put(CacheReadFilter.class.getName(), buffer);
 
