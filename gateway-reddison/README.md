@@ -13,13 +13,13 @@ chain.
 
 1. Run before NettyRoutingFilter
 2. Get BinaryStream from redis
-3. If cached; `setAlreadyRouted(exchange)` and write response
-4. If empty; `chain.filter(exchange)` and continue to NettyRoutingFilter
+3. If cached; `setAlreadyRouted(exchange)` set buffer to exchange attribute for CacheHitFilter
+4. If empty; `chain.filter(exchange)` and continue to NettyRoutingFilter.
 
 It was `Mono<byte[]>` which mean it has to retain and read all into memory I was expecting `Flux<SomeBuffer>`, and when
 the first signal indicate it's cached to publish upstream immediately.
 
-## Cache Write Filter
+## Cache Miss Filter
 
 1. Run before NettyWriteResponseFilter
 2. Modified HttpResponse to intercept `writeWith`
@@ -28,6 +28,12 @@ the first signal indicate it's cached to publish upstream immediately.
 5. `Mono.zip` to wrap both connection, so they get pulled together.
 6. First connection write to `super.writeWith`
 7. Second connection write to redis client.
+
+## Cache Hit Filter
+
+1. Same order as NettyWriteResponseFilter
+2. Defer and get Buffer from exchange.
+3. Write buffer to response
 
 ## Hypothesis and Conclusion
 
